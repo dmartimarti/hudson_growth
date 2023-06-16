@@ -363,7 +363,7 @@ def main():
 
     print(f'Reading files and creating {bcolors.OKCYAN}dataframes{bcolors.ENDC}: \n')
     final_df = pd.DataFrame()
-    with mp.get_context("fork").Pool(8) as p:
+    with mp.get_context("spawn").Pool(8) as p:
         for i, df in enumerate(tqdm(p.imap(hudson_df_reader_parallel, 
                                            zip(files_w_path, dates_full, plates_vector)), 
                                            total=len(files))):
@@ -398,7 +398,7 @@ def main():
 
     # plot the plates
     print(f'Plotting {bcolors.OKCYAN}plates{bcolors.ENDC}.\n')
-    with mp.get_context("fork").Pool(8) as p:
+    with mp.get_context("spawn").Pool(8) as p:
         for _ in tqdm(p.imap(plot_plate_wrapper, zip([final_df_w]*plates, [plates]*plates, [OUTPUT_PLOTS]*plates)), total=len([plates])):
             pass
 
