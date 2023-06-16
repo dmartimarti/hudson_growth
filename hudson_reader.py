@@ -338,6 +338,9 @@ def main():
     design = pd.read_excel(args.input, sheet_name='Design')
     plates = int(args.plates)
 
+    # print the info with colors
+    print(f'\nAnalysing the data in {bcolors.OKBLUE}{ROOT}{bcolors.ENDC}, with {bcolors.OKGREEN}{plates}{bcolors.ENDC} plates.\n')
+
     # create output folder
     if not os.path.exists(OUTPUT):
         os.makedirs(OUTPUT)
@@ -359,7 +362,7 @@ def main():
     plates_vector = [(i % plates) + 1 for i in range(len(files))]
     files_w_path = [f'{ROOT}/{f}' for f in files]
 
-    print('Reading files and creating dataframe: \n')
+    print(f'Reading files and creating {bcolors.OKCYAN}dataframes{bcolors.ENDC}: \n')
     final_df = pd.DataFrame()
     with mp.get_context("fork").Pool(8) as p:
         for i, df in enumerate(tqdm(p.imap(hudson_df_reader_parallel, 
@@ -391,11 +394,11 @@ def main():
         design = design.merge(final_pattern_metadata, on='Pattern', how='left')
 
     # calculate AUCs
-    print('Calculating AUCs: \n')
+    print(f'\nCalculating {bcolors.OKCYAN}AUCs{bcolors.ENDC}.\n')
     final_aucs = calculate_aucs(final_df_w) 
 
     # plot the plates
-    print('Plotting plates: \n')
+    print(f'Plotting {bcolors.OKCYAN}plates{bcolors.ENDC}.\n')
     with mp.get_context("fork").Pool(8) as p:
         for _ in tqdm(p.imap(plot_plate_wrapper, zip([final_df_w]*plates, [plates]*plates, [OUTPUT_PLOTS]*plates)), total=len([plates])):
             pass

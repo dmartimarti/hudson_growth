@@ -19,6 +19,8 @@ You can create a new conda environment for this. The packages needed are: pandas
 conda install pandas numpy matplotlib tqdm openpyxl
 ```
 
+Python must be 3.6 or higher.
+
 ### Usage
 
 ```
@@ -30,8 +32,9 @@ python hudson_reader.py -i <input Design file (Default is "Design.xlsx")> \
 ```
 
 For example, for the test data included in the repo, you should run
-    
-    ```
-    python hudson_reader.py -i Design.xlsx -f ./test_data -p 4 -o Output -t 4
-    ```
+
+
+```
+python hudson_reader.py -i Design.xlsx -f ./test_data -p 4 -o Output -t 4
+```
 
