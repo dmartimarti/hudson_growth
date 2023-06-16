@@ -62,7 +62,7 @@ __email__ = 'dmartimarti **AT** gmail.com'
 __maintainer__ = 'Daniel Martínez Martínez'
 __status__ = 'alpha'
 __date__ = 'Jun 2023'
-__version__ = '0.1'
+__version__ = '0.2'
 
 # arguments
 parser = argparse.ArgumentParser(description='Reads the output files from the Hudson OD reader from our lab.')
@@ -106,6 +106,7 @@ class bcolors:
 ROOT = args.folder
 OUTPUT = args.output
 OUTPUT_PLOTS = os.path.join(OUTPUT, 'plots')
+n_threads = int(args.threads)
 
 
 # functions of the script
@@ -363,7 +364,7 @@ def main():
 
     print(f'Reading files and creating {bcolors.OKCYAN}dataframes{bcolors.ENDC}: \n')
     final_df = pd.DataFrame()
-    with mp.get_context("spawn").Pool(8) as p:
+    with mp.get_context("spawn").Pool(n_threads) as p:
         for i, df in enumerate(tqdm(p.imap(hudson_df_reader_parallel, 
                                            zip(files_w_path, dates_full, plates_vector)), 
                                            total=len(files))):
@@ -396,19 +397,23 @@ def main():
     print(f'\nCalculating {bcolors.OKCYAN}AUCs{bcolors.ENDC}.\n')
     final_aucs = calculate_aucs(final_df_w) 
 
-    # plot the plates
-    print(f'Plotting {bcolors.OKCYAN}plates{bcolors.ENDC}.\n')
-    with mp.get_context("spawn").Pool(8) as p:
-        for _ in tqdm(p.imap(plot_plate_wrapper, zip([final_df_w]*plates, [plates]*plates, [OUTPUT_PLOTS]*plates)), total=len([plates])):
-            pass
-
-
     # write the dataframes to csv
     final_df_w = design.merge(final_df_w, on=['Plate', 'Well'], how='left')
     final_aucs = design.merge(final_aucs, on=['Plate', 'Well'], how='left')
 
     final_df_w.to_csv(OUTPUT+'/Timeseries.csv', index=False)
     final_aucs.to_csv(OUTPUT+'/Summary.csv', index=False)
+
+    # plot the plates
+    print(f'Plotting {bcolors.OKCYAN}plates{bcolors.ENDC}.\n')
+    if n_threads > 1:
+        with mp.get_context("spawn").Pool(n_threads) as p:
+            for _ in tqdm(p.imap(plot_plate_wrapper, zip([final_df_w]*plates, [plates]*plates, [OUTPUT_PLOTS]*plates)), total=len([plates])):
+                pass
+    else:
+        print('Using 1 thread.')
+        for plate in tqdm(range(1, plates+1)):
+            plot_plate_wrapper((final_df_w, plate, OUTPUT_PLOTS))
     
 if __name__ == '__main__':
     main()
