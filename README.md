@@ -16,7 +16,7 @@ Finally, the code uses some tiny bits of parallelisation, so you can specify how
 You can create a new conda environment for this. The packages needed are: pandas, numpy, matplotlib, tqdm and openpyxl. You can install them by running:
 
 ```
-conda install pandas numpy matplotlib tqdm openpyxl
+conda install pandas numpy matplotlib tqdm openpyxl scipy
 ```
 
 Python must be 3.6 or higher.
