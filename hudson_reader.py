@@ -371,6 +371,10 @@ def main():
             # concat the dataframes
             final_df = pd.concat([final_df, df], ignore_index=True)
     
+    # subctract the min value per well and plate so it departs from 0
+    # min_vals = final_df.groupby(['Plate', 'Well']).min()
+    final_df['OD_raw'] = final_df['OD_raw'] - final_df.groupby(['Plate', 'Well'])['OD_raw'].transform('min')
+
     # create a column with Time_h, time in hours, group by plate and well, and fill the column with the time in hours from 0 using the interval 
     final_df['Time_h'] = final_df.groupby(['Plate', 'Well']).cumcount().to_numpy() * interval
 
