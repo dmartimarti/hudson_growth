@@ -262,6 +262,41 @@ def plot_plate_wrapper(args):
     plot_plate(*args)
 
 
+def plot_plate_384(df, plate, save_path=None):
+    """
+    Function that plots the OD values of a plate.
+    """
+    plt.figure(figsize=(35,24))
+    df = df[df['Plate'] == plate]
+
+    for i, well in enumerate(df['Well'].unique()):
+        plt.subplot(16,24,i+1)
+        # filter the data for the well
+        well_data = df[df['Well'] == well]
+        # plot the data
+        plt.plot(well_data['Time_h'], well_data['OD_w'])
+        # if the well is not in the last row, remove the xticks
+        if well[0] != 'P':
+            plt.xticks([])
+        # if the well is in the first column, set the y ticks
+        if well[1] != '1' and well[1] not in ['10', '11', '12']:
+            plt.yticks([])
+        # set the title
+        plt.title(well)
+    plt.suptitle(f'Plate {plate}')
+    # save the plot
+    plt.savefig(f'{save_path}/plate_{plate}.pdf')
+    plt.close()
+
+
+def plot_plate_384_wrapper(args):
+    """
+    Wrapper function for the plot_plate function.
+    """
+    plot_plate_384(*args)
+
+
+
 def get_well_names(num_letters, num_numbers):
     """
     Function that returns a list of all possible combinations of letters (from A to a specified number) and numbers (from 1 to a specified number)
@@ -410,14 +445,27 @@ def main():
 
     # plot the plates
     print(f'Plotting {bcolors.OKCYAN}plates{bcolors.ENDC}.\n')
-    if n_threads > 1:
-        with mp.get_context("spawn").Pool(n_threads) as p:
-            for _ in tqdm(p.imap(plot_plate_wrapper, zip([final_df_w]*plates, [plates]*plates, [OUTPUT_PLOTS]*plates)), total=len([plates])):
-                pass
+    if plate_size == 96:    
+        if n_threads > 1:
+            with mp.get_context("spawn").Pool(n_threads) as p:
+                for _ in tqdm(p.imap(plot_plate_wrapper, zip([final_df_w]*plates, [plates]*plates, [OUTPUT_PLOTS]*plates)), total=len([plates])):
+                    pass
+        else:
+            print('Using 1 thread.')
+            for plate in tqdm(range(1, plates+1)):
+                plot_plate_wrapper((final_df_w, plate, OUTPUT_PLOTS))
+    elif plate_size == 384:
+        if n_threads > 1:
+            with mp.get_context("spawn").Pool(n_threads) as p:
+                for _ in tqdm(p.imap(plot_plate_384_wrapper, zip([final_df_w]*plates, [plates]*plates, [OUTPUT_PLOTS]*plates)), total=len([plates])):
+                    pass
+        else:
+            print('Using 1 thread.')
+            for plate in tqdm(range(1, plates+1)):
+                plot_plate_384_wrapper((final_df_w, plate, OUTPUT_PLOTS))
     else:
-        print('Using 1 thread.')
-        for plate in tqdm(range(1, plates+1)):
-            plot_plate_wrapper((final_df_w, plate, OUTPUT_PLOTS))
-    
+        print('Plate size not supported.')
+
+
 if __name__ == '__main__':
     main()
